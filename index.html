@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Agricultural Labor & Loan Management System">
+    <meta name="theme-color" content="#1976d2">
+    <title>Agricultural Labor Management</title>
+    
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1 0 auto;
+        }
+        
+        .container { 
+            margin-top: 20px; 
+            width: 90%;
+        }
+        
+        .card { 
+            margin: 10px 0; 
+        }
+        
+        .loading { 
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 8px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .page-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .page-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .container { 
+                width: 95%;
+                padding: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="blue darken-2">
+        <div class="nav-wrapper">
+            <a href="#!" class="brand-logo" onclick="showPage('dashboard'); return false;">
+                <i class="material-icons left hide-on-small-only">agriculture</i>
+                AgriLabor
+            </a>
+            <a href="#!" data-target="mobile-nav" class="sidenav-trigger">
+                <i class="material-icons">menu</i>
+            </a>
+            <ul class="right hide-on-med-and-down">
+                <li><a href="#!" onclick="showPage('dashboard'); return false;">
+                    <i class="material-icons left">dashboard</i>Dashboard
+                </a></li>
+                <li><a href="#!" onclick="showPage('worklog'); return false;">
+                    <i class="material-icons left">add_circle</i>Add Work Log
+                </a></li>
+                <li><a href="#!" onclick="showPage('laborers'); return false;">
+                    <i class="material-icons left">people</i>Laborers
+                </a></li>
+                <li><a href="#!" onclick="showPage('reports'); return false;">
+                    <i class="material-icons left">assessment</i>Reports
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <ul class="sidenav" id="mobile-nav">
+        <li><div class="user-view blue darken-2" style="padding: 20px;">
+            <span class="white-text name">AgriLabor</span>
+        </div></li>
+        <li><a href="#!" onclick="showPage('dashboard'); closeSidenav();">
+            <i class="material-icons">dashboard</i>Dashboard
+        </a></li>
+        <li><a href="#!" onclick="showPage('worklog'); closeSidenav();">
+            <i class="material-icons">add_circle</i>Add Work Log
+        </a></li>
+        <li><a href="#!" onclick="showPage('laborers'); closeSidenav();">
+            <i class="material-icons">people</i>Laborers
+        </a></li>
+        <li><a href="#!" onclick="showPage('reports'); closeSidenav();">
+            <i class="material-icons">assessment</i>Reports
+        </a></li>
+    </ul>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page-section active">
+                <h4>Dashboard</h4>
+                <div class="row">
+                    <div class="col s12 m6 l3">
+                        <div class="card blue darken-1">
+                            <div class="card-content white-text">
+                                <span class="card-title">Laborers</span>
+                                <h3 id="stat-laborers">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col s12 m6 l3">
+                        <div class="card green darken-1">
+                            <div class="card-content white-text">
+                                <span class="card-title">Work Logs</span>
+                                <h3 id="stat-worklogs">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col s12 m6 l3">
+                        <div class="card orange darken-1">
+                            <div class="card-content white-text">
+                                <span class="card-title">Total Wages</span>
+                                <h3 id="stat-wages">₹0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col s12 m6 l3">
+                        <div class="card red darken-1">
+                            <div class="card-content white-text">
+                                <span class="card-title">Loan Balance</span>
+                                <h3 id="stat-loans">₹0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Recent Work Logs</span>
+                        <table class="striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Laborer</th>
+                                    <th>Work Type</th>
+                                    <th>Wage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-worklogs">
+                                <tr><td colspan="4" class="center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Log Page -->
+            <div id="worklog-page" class="page-section">
+                <h4>Add Work Log</h4>
+                <div class="card">
+                    <div class="card-content">
+                        <form id="worklog-form">
+                            <div class="input-field">
+                                <input type="date" id="work-date" required>
+                                <label for="work-date" class="active">Date</label>
+                            </div>
+                            <div class="input-field">
+                                <select id="laborer-select" required>
+                                    <option value="">Select Laborer</option>
+                                </select>
+                                <label>Laborer</label>
+                            </div>
+                            <div class="input-field">
+                                <select id="worktype-select" required>
+                                    <option value="">Select Work Type</option>
+                                </select>
+                                <label>Work Type</label>
+                            </div>
+                            <div class="input-field">
+                                <input type="number" id="wage-earned" step="0.01" min="0" required>
+                                <label for="wage-earned">Wage Earned</label>
+                            </div>
+                            <div class="input-field">
+                                <input type="number" id="cash-paid" step="0.01" min="0" required>
+                                <label for="cash-paid">Cash Paid</label>
+                            </div>
+                            <div class="input-field">
+                                <input type="text" id="loan-deduction" readonly>
+                                <label for="loan-deduction" class="active">Loan Deduction (Auto)</label>
+                            </div>
+                            <button type="submit" class="btn waves-effect waves-light blue">
+                                Submit<i class="material-icons right">send</i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Laborers Page -->
+            <div id="laborers-page" class="page-section">
+                <h4>Manage Laborers</h4>
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Add New Laborer</span>
+                        <form id="laborer-form">
+                            <div class="input-field">
+                                <input type="text" id="laborer-name" required>
+                                <label for="laborer-name">Name</label>
+                            </div>
+                            <div class="input-field">
+                                <input type="tel" id="laborer-phone" required>
+                                <label for="laborer-phone">Phone</label>
+                            </div>
+                            <button type="submit" class="btn waves-effect waves-light blue">
+                                Add Laborer<i class="material-icons right">person_add</i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">All Laborers</span>
+                        <table class="striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Loan Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="laborers-list">
+                                <tr><td colspan="3" class="center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Page -->
+            <div id="reports-page" class="page-section">
+                <h4>Reports</h4>
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Work Log History</span>
+                        <div class="row">
+                            <div class="input-field col s12 m6">
+                                <input type="date" id="filter-start-date">
+                                <label for="filter-start-date" class="active">Start Date</label>
+                            </div>
+                            <div class="input-field col s12 m6">
+                                <input type="date" id="filter-end-date">
+                                <label for="filter-end-date" class="active">End Date</label>
+                            </div>
+                        </div>
+                        <button onclick="loadReports()" class="btn waves-effect waves-light blue">
+                            Load Reports<i class="material-icons right">search</i>
+                        </button>
+                        
+                        <table class="striped" style="margin-top: 20px;">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Laborer</th>
+                                    <th>Work Type</th>
+                                    <th>Wage</th>
+                                    <th>Cash Paid</th>
+                                    <th>Deduction</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-list">
+                                <tr><td colspan="6" class="center">Select date range and click Load Reports</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="loading center-align">
+        <div class="preloader-wrapper big active">
+            <div class="spinner-layer spinner-blue-only">
+                <div class="circle-clipper left"><div class="circle"></div></div>
+                <div class="gap-patch"><div class="circle"></div></div>
+                <div class="circle-clipper right"><div class="circle"></div></div>
+            </div>
+        </div>
+        <p style="margin-top: 20px;">Loading...</p>
+    </div>
+
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    
+    <!-- Application JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
